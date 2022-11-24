@@ -6,13 +6,13 @@ module.exports = {
   solidity: "0.8.17",
   networks: {
     mainnet: {
-      url: `https://mainnet.infura.io/v3/429eb57532b54560b1d4cc4201724bf0`,
+      url: `https://mainnet.infura.io/v3/${process.env.ID}`,
       accounts: [
         process.env.MAINNET_PRIVATE_KEY,
       ],
     },
     goerli: {
-      url: `https://goerli.infura.io/v3/429eb57532b54560b1d4cc4201724bf0`,
+      url: `https://goerli.infura.io/v3/${process.env.ID}`,
       accounts: [
         process.env.TESTNET_PRIVATE_KEY,
       ],
