@@ -14,7 +14,6 @@ contract Token is ERC20 {
     }
 
     function mint(address _addr, uint256 _amount) external {
-        if(totalSupply() == 0) revert('yada yada');
         _mint(_addr, _amount);
     }
 
