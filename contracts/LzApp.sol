@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
 
+/**
+ * Created on 2022-11-20 06:20
+ * @title A contract used to bridge tokens to different bridge using LayerZero protocol.
+ * @author: Overlay - c-n-o-t-e
+ */
 pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./types/BaseNonblockingLzApp.sol";
 import "./interfaces/IToken.sol";
 
-/// @title A LayerZero example sending a cross chain message from a source chain to a destination chain to increment a counter
 contract LzApp is Pausable, BaseNonblockingLzApp {
     event SendToChain(address indexed _sender, uint16 _dstChainId, address _toAddress, uint _amount, uint64 _nonce, bytes payload);
     event Mint(address indexed _toAddress, bytes _dstChainId,  uint _amount, uint64 _nonce);
@@ -44,7 +48,6 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         );
 
         require(msg.value >= messageFee, "Must send enough value to cover messageFee");
-
         _lzSend(_dstChainId, payload, payable(msg.sender), address(0x0), adapterParams);
 
         uint64 nonce = lzEndpoint.getOutboundNonce(_dstChainId, address(this));
