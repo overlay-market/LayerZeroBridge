@@ -2,7 +2,7 @@
 
 /**
  * Created on 2022-11-20 06:20
- * @Summary A contract used to bridge tokens to different chain using LayerZero protocol.
+ * @Summary A contract used to bridge tokens to different chains using LayerZero protocol.
  * @title Overlay Bridge.
  * @author: Overlay - c-n-o-t-e
  */
@@ -24,7 +24,7 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         iToken = IToken(_token);
     }
 
-    /// @notice bridge tokens to another chain
+    /// @notice mints tokens on destination chain
     /// @param _srcAddress bytes of both address (dst, src)
     /// @param _nonce tx count
     /// @param _payload data from src chain
