@@ -1,6 +1,5 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { advanceBlock } = require("./advancement");
 
 let owner,
  lzAppA,
@@ -11,7 +10,7 @@ let owner,
  tokenB,
  layerZeroEndpointMockSrc,
  layerZeroEndpointMockDst;
- 
+
 describe("bridgeToken", function () {
   beforeEach(async function () {
     const accounts = await ethers.getSigners();
@@ -75,6 +74,17 @@ describe("bridgeToken", function () {
     await expect(lzAppA.bridgeToken(chainIdDst, 10000)).to.revertedWith(
       "Pausable: paused"
     );
+  });
+
+  it("should revert if message fee is low", async function () {
+    await lzAppA.setMinDstGasLookup(chainIdDst, 35000);
+    
+    await expect(lzAppA.bridgeToken(chainIdDst, 10000, {
+      value: ethers.utils.parseEther("0.001")
+    })).to.revertedWithCustomError(
+        lzAppA,
+        `LzApp_MessageFeeLow`
+      )
   });
 
   it("should fail and save data if distination gas is low", async function () {

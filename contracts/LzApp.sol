@@ -2,7 +2,8 @@
 
 /**
  * Created on 2022-11-20 06:20
- * @title A contract used to bridge tokens to different bridge using LayerZero protocol.
+ * @Summary A contract used to bridge tokens to different chain using LayerZero protocol.
+ * @title Overlay Bridge.
  * @author: Overlay - c-n-o-t-e
  */
 pragma solidity ^0.8.10;
@@ -10,6 +11,8 @@ pragma solidity ^0.8.10;
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./types/BaseNonblockingLzApp.sol";
 import "./interfaces/IToken.sol";
+
+error LzApp_MessageFeeLow();
 
 contract LzApp is Pausable, BaseNonblockingLzApp {
     event SendToChain(address indexed _sender, uint16 _dstChainId, address _toAddress, uint _amount, uint64 _nonce, bytes payload);
@@ -21,18 +24,25 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         iToken = IToken(_token);
     }
 
+    /// @notice bridge tokens to another chain
+    /// @param _srcAddress bytes of both address (dst, src)
+    /// @param _nonce tx count
+    /// @param _payload data from src chain
     function _nonblockingLzReceive(
         uint16,
         bytes memory _srcAddress,
-        uint64 nonce,
+        uint64 _nonce,
         bytes memory _payload
     ) internal override {
         (address toAddress, uint256 amount) = abi.decode(_payload, (address, uint256));
 
         iToken.mint(toAddress, amount);
-        emit Mint(toAddress, _srcAddress,  amount, nonce);
+        emit Mint(toAddress, _srcAddress,  amount, _nonce);
     }
 
+    /// @notice bridge tokens to another chain
+    /// @param _dstChainId destination chain ID
+    /// @param _amount amount to burn and bridge
     function bridgeToken(uint16 _dstChainId, uint256 _amount) public payable whenNotPaused {
         iToken.burn(msg.sender, _amount);
         bytes memory payload = abi.encode(msg.sender, _amount);
@@ -47,16 +57,17 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
             adapterParams
         );
 
-        require(msg.value >= messageFee, "Must send enough value to cover messageFee");
+        if(msg.value < messageFee) revert LzApp_MessageFeeLow();
         _lzSend(_dstChainId, payload, payable(msg.sender), address(0x0), adapterParams);
 
         uint64 nonce = lzEndpoint.getOutboundNonce(_dstChainId, address(this));
         emit SendToChain(msg.sender, _dstChainId, msg.sender, _amount, nonce, payload);
     }
 
-    // disable bridging token
-    function enable(bool en) external {
-        if (en) {
+    /// @notice disable bridging token
+    /// @param _en flag indicator to pause/unpause contract
+    function enable(bool _en) external {
+        if (_en) {
             _pause();
         } else {
             _unpause();
