@@ -24,6 +24,10 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         iToken = IToken(_token);
     }
 
+    function setTokenAddress(address _token) onlyOwner {
+        iToken = IToken(_token);
+    }
+
     /// @notice mints tokens on destination chain
     /// @param _srcAddress bytes of both address (dst, src)
     /// @param _nonce tx count
