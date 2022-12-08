@@ -16,18 +16,33 @@ error LzApp_AmountTooLow();
 error LzApp_MessageFeeLow();
 
 contract LzApp is Pausable, BaseNonblockingLzApp {
-    event SendToChain(address indexed _sender, uint16 _dstChainId, address _toAddress, uint _amount, uint64 _nonce, bytes payload);
-    event Mint(address indexed _toAddress, bytes _dstChainId,  uint _amount, uint64 _nonce);
+    event SendToChain(
+        address indexed _sender,
+        uint16 _dstChainId,
+        address _toAddress,
+        uint _amount,
+        uint64 _nonce,
+        bytes payload
+    );
+    event Mint(
+        address indexed _toAddress,
+        bytes _dstChainId,
+        uint _amount,
+        uint64 _nonce
+    );
 
     IToken iToken;
 
-    constructor(address _lzEndpoint, address _token) BaseNonblockingLzApp(_lzEndpoint) {
+    constructor(
+        address _lzEndpoint,
+        address _token
+    ) BaseNonblockingLzApp(_lzEndpoint) {
         iToken = IToken(_token);
     }
 
     /// @notice sets token address
     /// @param _token token address
-    function setTokenAddress(address _token) onlyOwner {
+    function setTokenAddress(address _token) external onlyOwner {
         iToken = IToken(_token);
     }
 
@@ -41,21 +56,30 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         uint64 _nonce,
         bytes memory _payload
     ) internal override {
-        (address toAddress, uint256 amount) = abi.decode(_payload, (address, uint256));
+        (address toAddress, uint256 amount) = abi.decode(
+            _payload,
+            (address, uint256)
+        );
 
         iToken.mint(toAddress, amount);
-        emit Mint(toAddress, _srcAddress,  amount, _nonce);
+        emit Mint(toAddress, _srcAddress, amount, _nonce);
     }
 
     /// @notice bridge tokens to another chain
     /// @param _dstChainId destination chain ID
     /// @param _amount amount to burn and bridge
-    function bridgeToken(uint16 _dstChainId, uint256 _amount) public payable whenNotPaused {
-        if(_amount == 0) revert LzApp_AmountTooLow();
+    function bridgeToken(
+        uint16 _dstChainId,
+        uint256 _amount
+    ) public payable whenNotPaused {
+        if (_amount == 0) revert LzApp_AmountTooLow();
         iToken.burn(msg.sender, _amount);
         bytes memory payload = abi.encode(msg.sender, _amount);
 
-        bytes memory adapterParams = abi.encodePacked(lzEndpoint.getSendVersion(address(this)), minDstGasLookup[_dstChainId]);
+        bytes memory adapterParams = abi.encodePacked(
+            lzEndpoint.getSendVersion(address(this)),
+            minDstGasLookup[_dstChainId]
+        );
 
         (uint256 messageFee, ) = lzEndpoint.estimateFees(
             _dstChainId,
@@ -65,11 +89,24 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
             adapterParams
         );
 
-        if(msg.value < messageFee) revert LzApp_MessageFeeLow();
-        _lzSend(_dstChainId, payload, payable(msg.sender), address(0x0), adapterParams);
+        if (msg.value < messageFee) revert LzApp_MessageFeeLow();
+        _lzSend(
+            _dstChainId,
+            payload,
+            payable(msg.sender),
+            address(0x0),
+            adapterParams
+        );
 
         uint64 nonce = lzEndpoint.getOutboundNonce(_dstChainId, address(this));
-        emit SendToChain(msg.sender, _dstChainId, msg.sender, _amount, nonce, payload);
+        emit SendToChain(
+            msg.sender,
+            _dstChainId,
+            msg.sender,
+            _amount,
+            nonce,
+            payload
+        );
     }
 
     /// @notice disable bridging token

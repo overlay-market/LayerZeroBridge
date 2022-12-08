@@ -2,14 +2,14 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 let owner,
- lzAppA,
- LzAppB,
- chainIdSrc,
- chainIdDst,
- tokenA,
- tokenB,
- layerZeroEndpointMockSrc,
- layerZeroEndpointMockDst;
+  lzAppA,
+  LzAppB,
+  chainIdSrc,
+  chainIdDst,
+  tokenA,
+  tokenB,
+  layerZeroEndpointMockSrc,
+  layerZeroEndpointMockDst;
 
 describe("bridgeToken", function () {
   beforeEach(async function () {
@@ -78,13 +78,12 @@ describe("bridgeToken", function () {
 
   it("should revert if message fee is low", async function () {
     await lzAppA.setMinDstGasLookup(chainIdDst, 35000);
-    
-    await expect(lzAppA.bridgeToken(chainIdDst, 10000, {
-      value: ethers.utils.parseEther("0.001")
-    })).to.revertedWithCustomError(
-        lzAppA,
-        `LzApp_MessageFeeLow`
-      )
+
+    await expect(
+      lzAppA.bridgeToken(chainIdDst, 10000, {
+        value: ethers.utils.parseEther("0.001"),
+      })
+    ).to.revertedWithCustomError(lzAppA, `LzApp_MessageFeeLow`);
   });
 
   it("should fail and save data if distination gas is low", async function () {
@@ -92,7 +91,7 @@ describe("bridgeToken", function () {
 
     const tokenABalanceBeforeTx = await tokenA.balanceOf(owner.address);
     const tokenBBalanceBeforeTx = await tokenB.balanceOf(owner.address);
-    
+
     let tx = await lzAppA.bridgeToken(chainIdDst, "10000000000000000000", {
       value: ethers.utils.parseEther("0.5"),
     });
@@ -103,7 +102,7 @@ describe("bridgeToken", function () {
 
     const tokenABalanceAfterTx = await tokenA.balanceOf(owner.address);
     const tokenBBalanceAfterTx = await tokenB.balanceOf(owner.address);
-    
+
     const path = await layerZeroEndpointMockDst.path();
     const storedPayload = await layerZeroEndpointMockDst.storedPayload(
       chainIdSrc,
@@ -115,7 +114,7 @@ describe("bridgeToken", function () {
 
     expect(storedPayload[1]).to.equal(LzAppB.address);
     expect(storedPayload[2]).to.equal(hashedPayload);
-    
+
     expect(tokenBBalanceBeforeTx).to.equal("0");
     expect(tokenBBalanceAfterTx).to.equal("0");
   });
@@ -123,7 +122,7 @@ describe("bridgeToken", function () {
   it("should retry payload", async function () {
     await lzAppA.setMinDstGasLookup(chainIdDst, 35000);
     const tokenBBalanceBeforeTx = await tokenB.balanceOf(owner.address);
-    
+
     let tx = await lzAppA.bridgeToken(chainIdDst, "10000000000000000000", {
       value: ethers.utils.parseEther("0.5"),
     });
@@ -131,14 +130,14 @@ describe("bridgeToken", function () {
     let receipt = await tx.wait();
     let txPayload = await receipt.events[2].args[5];
     let hashedPayload = ethers.utils.keccak256(txPayload);
-    
+
     const path = await layerZeroEndpointMockDst.path();
     const storedPayload = await layerZeroEndpointMockDst.storedPayload(
       chainIdSrc,
       path
     );
-    
-    await layerZeroEndpointMockDst.retryPayload(chainIdSrc, path, txPayload)
+
+    await layerZeroEndpointMockDst.retryPayload(chainIdSrc, path, txPayload);
     const storedPayload1 = await layerZeroEndpointMockDst.storedPayload(
       chainIdSrc,
       path
@@ -155,8 +154,8 @@ describe("bridgeToken", function () {
     await lzAppA.setMinDstGasLookup(chainIdDst, 350000);
 
     const tokenABalanceBeforeTx = await tokenA.balanceOf(owner.address);
-    const tokenBBalanceBeforeTx = await tokenB.balanceOf(owner.address); 
-    
+    const tokenBBalanceBeforeTx = await tokenB.balanceOf(owner.address);
+
     let tx = await lzAppA.bridgeToken(chainIdDst, "10000000000000000000", {
       value: ethers.utils.parseEther("0.5"),
     });
@@ -166,18 +165,18 @@ describe("bridgeToken", function () {
 
     expect(tokenABalanceBeforeTx).to.equal("100000000000000000000");
     expect(tokenABalanceAfterTx).to.equal("90000000000000000000");
-    
+
     expect(tokenBBalanceBeforeTx).to.equal("0");
     expect(tokenBBalanceAfterTx).to.equal("10000000000000000000");
-  })
+  });
 
   it("bridge token to and fro", async function () {
     await lzAppA.setMinDstGasLookup(chainIdDst, 350000);
     await LzAppB.setMinDstGasLookup(chainIdSrc, 350000);
 
     const tokenABalanceBeforeTx = await tokenA.balanceOf(owner.address);
-    const tokenBBalanceBeforeTx = await tokenB.balanceOf(owner.address); 
-    
+    const tokenBBalanceBeforeTx = await tokenB.balanceOf(owner.address);
+
     await lzAppA.bridgeToken(chainIdDst, "10000000000000000000", {
       value: ethers.utils.parseEther("0.5"),
     });
@@ -191,5 +190,5 @@ describe("bridgeToken", function () {
 
     expect(tokenABalanceBeforeTx).to.equal(tokenABalanceAfterTx);
     expect(tokenBBalanceBeforeTx).to.equal(tokenBBalanceAfterTx);
-  })
+  });
 });
