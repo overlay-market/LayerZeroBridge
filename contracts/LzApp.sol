@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "./types/BaseNonblockingLzApp.sol";
 import "./interfaces/IToken.sol";
 
+error LzApp_AmountTooLow();
 error LzApp_MessageFeeLow();
 
 contract LzApp is Pausable, BaseNonblockingLzApp {
@@ -21,6 +22,12 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
     IToken iToken;
 
     constructor(address _lzEndpoint, address _token) BaseNonblockingLzApp(_lzEndpoint) {
+        iToken = IToken(_token);
+    }
+
+    /// @notice sets token address
+    /// @param _token token address
+    function setTokenAddress(address _token) onlyOwner {
         iToken = IToken(_token);
     }
 
@@ -44,6 +51,7 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
     /// @param _dstChainId destination chain ID
     /// @param _amount amount to burn and bridge
     function bridgeToken(uint16 _dstChainId, uint256 _amount) public payable whenNotPaused {
+        if(_amount == 0) revert LzApp_AmountTooLow();
         iToken.burn(msg.sender, _amount);
         bytes memory payload = abi.encode(msg.sender, _amount);
 
