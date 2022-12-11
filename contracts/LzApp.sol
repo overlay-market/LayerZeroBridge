@@ -74,12 +74,9 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
     ) public payable whenNotPaused {
         if (_amount == 0) revert LzApp_AmountTooLow();
         iToken.burn(msg.sender, _amount);
-        bytes memory payload = abi.encode(msg.sender, _amount);
 
-        bytes memory adapterParams = abi.encodePacked(
-            lzEndpoint.getSendVersion(address(this)),
-            minDstGasLookup[_dstChainId]
-        );
+        bytes memory payload = abi.encode(msg.sender, _amount);
+        bytes memory adapterParams = getAdapterParams(_dstChainId);
 
         (uint256 messageFee, ) = lzEndpoint.estimateFees(
             _dstChainId,
@@ -109,9 +106,19 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         );
     }
 
+    function getAdapterParams(
+        uint16 _dstChainId
+    ) public view returns (bytes memory) {
+        return
+            abi.encodePacked(
+                lzEndpoint.getSendVersion(address(this)),
+                minDstGasLookup[_dstChainId]
+            );
+    }
+
     /// @notice disable bridging token
     /// @param _en flag indicator to pause/unpause contract
-    function enable(bool _en) external {
+    function enable(bool _en) external onlyOwner {
         if (_en) {
             _pause();
         } else {
