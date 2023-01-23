@@ -14,6 +14,7 @@ import "./interfaces/IToken.sol";
 
 error LzApp_AmountTooLow();
 error LzApp_MessageFeeLow();
+error LzApp_AmountAboveUserBalance();
 
 contract LzApp is Pausable, BaseNonblockingLzApp {
     event SendToChain(
@@ -31,7 +32,7 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         uint64 _nonce
     );
 
-    IToken iToken;
+    IToken public iToken;
 
     constructor(
         address _lzEndpoint,
@@ -73,6 +74,7 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
         uint256 _amount
     ) public payable whenNotPaused {
         if (_amount == 0) revert LzApp_AmountTooLow();
+        if (_amount > iToken.balanceOf(msg.sender)) revert LzApp_AmountAboveUserBalance();
         iToken.burn(msg.sender, _amount);
 
         bytes memory payload = abi.encode(msg.sender, _amount);
