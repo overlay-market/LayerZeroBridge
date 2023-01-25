@@ -17,7 +17,7 @@ contract Token is ERC20 {
         _mint(_addr, _amount);
     }
 
-    function burn(address _addr, uint256 _amount) external {
-        _burn(_addr, _amount);
+    function burn(uint256 _amount) external {
+        _burn(msg.sender, _amount);
     }
 }
