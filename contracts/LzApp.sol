@@ -75,6 +75,8 @@ contract LzApp is Pausable, BaseNonblockingLzApp {
     ) public payable whenNotPaused {
         if (_amount == 0) revert LzApp_AmountTooLow();
         if (_amount > iToken.balanceOf(msg.sender)) revert LzApp_AmountAboveUserBalance();
+
+        iToken.transferFrom(msg.sender, address(this), _amount);
         iToken.burn(_amount);
 
         bytes memory payload = abi.encode(msg.sender, _amount);

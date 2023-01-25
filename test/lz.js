@@ -42,6 +42,9 @@ describe("bridgeToken", function () {
       tokenB.address
     );
 
+    await tokenA.approve(lzAppA.address, "1000000000000000000000");
+    await tokenB.approve(LzAppB.address, "1000000000000000000000");
+
     await layerZeroEndpointMockSrc.setDestLzEndpoint(
       LzAppB.address,
       layerZeroEndpointMockDst.address
@@ -97,7 +100,7 @@ describe("bridgeToken", function () {
     });
 
     let receipt = await tx.wait();
-    let txPayload = await receipt.events[2].args[5];
+    let txPayload = await receipt.events[4].args[5];
     let hashedPayload = ethers.utils.keccak256(txPayload);
 
     const tokenABalanceAfterTx = await tokenA.balanceOf(owner.address);
@@ -128,7 +131,7 @@ describe("bridgeToken", function () {
     });
 
     let receipt = await tx.wait();
-    let txPayload = await receipt.events[2].args[5];
+    let txPayload = await receipt.events[4].args[5];
     let hashedPayload = ethers.utils.keccak256(txPayload);
 
     const path = await layerZeroEndpointMockDst.path();
